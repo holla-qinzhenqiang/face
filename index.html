@@ -1,0 +1,186 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>tracking.js - face hello world</title>
+  <script src="./face.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      font-family: Helvetica, Arial, sans-serif;
+    }
+
+    .demo-title {
+      position: absolute;
+      width: 100%;
+      background: #2e2f33;
+      z-index: 2;
+      padding: .7em 0;
+    }
+
+    .demo-title a {
+      color: #fff;
+      border-bottom: 1px dotted #a64ceb;
+      text-decoration: none;
+    }
+
+    .demo-title p {
+      color: #fff;
+      text-align: center;
+      text-transform: lowercase;
+      font-size: 15px;
+    }
+
+    .demo-frame {
+      background: url(frame.png) no-repeat;
+      width: 854px;
+      height: 658px;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      margin: -329px 0 0 -429px;
+      padding: 95px 20px 45px 34px;
+      overflow: hidden;
+      -webkit-box-sizing: border-box;
+      -moz-box-sizing: border-box;
+      -ms-box-sizing: border-box;
+      box-sizing: border-box;
+    }
+
+    .demo-container {
+      width: 100%;
+      height: 530px;
+      position: relative;
+      background: #eee;
+      overflow: hidden;
+      border-bottom-right-radius: 10px;
+      border-bottom-left-radius: 10px;
+    }
+
+    .dg.ac {
+      z-index: 100 !important;
+      top: 50px !important;
+    }
+
+    .rect {
+      border: 2px solid #a64ceb;
+      left: -1000px;
+      position: absolute;
+      top: -1000px;
+    }
+
+    #img {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin: -173px 0 0 -300px;
+    }
+
+    video,
+    canvas {
+      margin-left: 230px;
+      margin-top: 120px;
+      position: absolute;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="demo-title">
+    <p><a href="http://trackingjs.com" target="_parent">tracking.js</a> － detect faces, eyes and mouths in a image</p>
+  </div>
+
+  <div class="demo-frame">
+    <div class="demo-container">
+      <video id="video" width="320" height="240" preload autoplay loop muted></video>
+      <canvas id="canvas" width="320" height="240"></canvas>
+    </div>
+  </div>
+
+  <script>
+    window.onloadxxxx = function () {
+      var img = document.getElementById('img');
+
+      // var tracker = new tracking.ObjectTracker(['face', 'eye', 'mouth']);
+      var tracker = new tracking.ObjectTracker(['face']);
+      tracker.setStepSize(1.7);
+
+      tracking.track('#img', tracker);
+
+      tracker.on('track', function (event) {
+        if (event.data.length > 0) {
+          console.log('检测到人脸')
+        }
+        event.data.forEach(function (rect) {
+          window.plot(rect.x, rect.y, rect.width, rect.height);
+        });
+      });
+
+      window.plot = function (x, y, w, h) {
+        var rect = document.createElement('div');
+        document.querySelector('.demo-container').appendChild(rect);
+        rect.classList.add('rect');
+        rect.style.width = w + 'px';
+        rect.style.height = h + 'px';
+        rect.style.left = (img.offsetLeft + x) + 'px';
+        rect.style.top = (img.offsetTop + y) + 'px';
+      };
+    };
+
+    window.onload = function () {
+      var video = document.getElementById('video');
+      var canvas = document.getElementById('canvas');
+      var context = canvas.getContext('2d');
+
+      var tracker = new tracking.ObjectTracker('face');
+      tracker.setInitialScale(4);
+      tracker.setStepSize(2);
+      tracker.setEdgesDensity(0.1);
+
+      tracking.track('#video', tracker, { camera: true });
+      tracker.on('track', function (event) {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        event.data.forEach(function (rect) {
+          context.strokeStyle = '#a64ceb';
+          context.strokeRect(rect.x, rect.y, rect.width, rect.height);
+          context.font = '11px Helvetica';
+          context.fillStyle = "#fff";
+          context.fillText('x: ' + rect.x + 'px', rect.x + rect.width + 5, rect.y + 11);
+          context.fillText('y: ' + rect.y + 'px', rect.x + rect.width + 5, rect.y + 22);
+        });
+      });
+
+    };
+  </script>
+
+</body>
+
+<script>
+  function handleSuccess(stream) {
+    const video = document.querySelector('video');
+    const videoTracks = stream.getVideoTracks();
+    console.log('Got stream with constraints:', constraints);
+    console.log(`Using video device: ${videoTracks[0].label}`);
+    window.stream = stream; // make variable available to browser console
+    video.srcObject = stream;
+  }
+
+  async function init() {
+    try {
+      const constraints = window.constraints = {
+        audio: false,
+        video: true
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      handleSuccess(stream);
+    } catch (e) {
+      console.log('获取视频错误', e)
+    }
+  }
+  init()
+</script>
+
+</html>
